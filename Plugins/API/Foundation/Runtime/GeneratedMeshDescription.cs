@@ -34,6 +34,9 @@ namespace RealtimeCSG.Foundation
 
 		/// <value>If requested by the <see cref="RealtimeCSG.Foundation.MeshQuery"/> this hold a surface parameter, otherwise its 0.</value>
 		/// <remarks>A surface parameter can be used to, for example, differentiate between meshes that use a different [UnityEngine.Material](https://docs.unity3d.com/ScriptReference/Material.html).</remarks>
+		// NOTE: must stay Int32 — [StructLayout(Sequential)] struct marshalled to the native CSG
+		// plugin (4-byte int). EntityId is 8 bytes and would corrupt the native layout. Convert
+		// EntityId<->int at the C# boundary.
 		public Int32		surfaceParameter;
 
 		/// <value>An unique index for each found <paramref name="meshQuery"/>/<paramref name="surfaceParameter"/> pair.</value>
@@ -81,7 +84,7 @@ namespace RealtimeCSG.Foundation
 			var hashCode = -190551774;
 			hashCode = hashCode * -1521134295;
 			hashCode = hashCode * -1521134295 + meshQuery.GetHashCode();
-			hashCode = hashCode * -1521134295 + (int)surfaceParameter;
+			hashCode = hashCode * -1521134295 + surfaceParameter.GetHashCode();
 			hashCode = hashCode * -1521134295 + (int)subMeshQueryIndex;
 			hashCode = hashCode * -1521134295 + (int)meshQueryIndex;
 			hashCode = hashCode * -1521134295 + (int)geometryHashValue;

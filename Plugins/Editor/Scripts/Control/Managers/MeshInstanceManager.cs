@@ -9,7 +9,7 @@ using RealtimeCSG.Foundation;
 using RealtimeCSG.Components;
 using UnityEditor.SceneManagement;
 #if UNITY_2018_3_OR_NEWER
-using UnityEditor.Experimental.SceneManagement;
+
 #endif
 
 namespace InternalRealtimeCSG
@@ -700,16 +700,16 @@ namespace InternalRealtimeCSG
 
 
 			Material renderMaterial = null;
-			PhysicMaterial physicsMaterial = null;
+			PhysicsMaterial physicsMaterial = null;
 			if (meshDescription.surfaceParameter != 0)
 			{
-				var obj = EditorUtility.InstanceIDToObject(meshDescription.surfaceParameter);
+				var obj = EditorUtility.EntityIdToObject(UnityEngine.EntityId.FromULong((ulong)(uint)meshDescription.surfaceParameter));
 				if (obj)
 				{
 					switch (meshDescription.meshQuery.LayerParameterIndex)
 					{
 						case LayerParameterIndex.RenderMaterial:  { renderMaterial  = obj as Material; break; }
-						case LayerParameterIndex.PhysicsMaterial: { physicsMaterial = obj as PhysicMaterial; break; }
+						case LayerParameterIndex.PhysicsMaterial: { physicsMaterial = obj as PhysicsMaterial; break; }
 					}
 				}
 			}
@@ -790,7 +790,7 @@ namespace InternalRealtimeCSG
 			}
 			
 			sharedMesh = new Mesh();
-			sharedMesh.name = $"<{baseName} generated {sharedMesh.GetInstanceID()}>";
+			sharedMesh.name = $"<{baseName} generated {sharedMesh.GetEntityId()}>";
 			sharedMesh.MarkDynamic();
             if (editorOnly)
                 sharedMesh.hideFlags = HideFlags.DontSaveInBuild;
@@ -976,7 +976,7 @@ namespace InternalRealtimeCSG
 				return "null";
 			if (!mat)
 				return "invalid";
-			return mat.name + " " + mat.GetInstanceID().ToString();
+			return mat.name + " " + mat.GetEntityId().ToString();
 		}
 
 		public static void ClearUVs(CSGModel model)
@@ -1471,7 +1471,7 @@ namespace InternalRealtimeCSG
 			var builder = new System.Text.StringBuilder();
 			builder.Append(instance.RenderSurfaceType);
 			builder.Append(' ');
-			builder.Append(instance.GetInstanceID());
+			builder.Append(instance.GetEntityId());
 
 			if (instance.PhysicsMaterial)
 			{
@@ -1481,7 +1481,7 @@ namespace InternalRealtimeCSG
 			}
 			if (renderMaterial)
 			{
-				builder.AppendFormat(" Material [{0} {1}]", renderMaterial.name, renderMaterial.GetInstanceID());
+				builder.AppendFormat(" Material [{0} {1}]", renderMaterial.name, renderMaterial.GetEntityId());
 			}
 
 			//builder.AppendFormat(" Key {0}", instance.GenerateKey().GetHashCode());
@@ -1964,7 +1964,7 @@ namespace InternalRealtimeCSG
 				if (meshInstance && meshInstance.gameObject)
                 {
                     //var key = meshInstance.GenerateKey();
-                    //var keyObj = EditorUtility.InstanceIDToObject(key.SurfaceParameter);
+                    //var keyObj = EditorUtility.EntityIdToObject(key.SurfaceParameter);
                     GameObjectExtensions.Destroy(meshInstance.gameObject);
 				}
 

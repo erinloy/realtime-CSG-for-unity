@@ -108,7 +108,31 @@ namespace RealtimeCSG
 
 		static Rect[] editModeRects;
 
-		
+		// --- Draggable in-scene toolbar (Unity-6 fork enhancement) ---
+		// Upstream hardcoded the overlay at (10,10). Persist a user-draggable position in
+		// EditorPrefs so the toolbar can be moved out of the way and stays put across sessions.
+		const string ToolbarPosXPref = "RealtimeCSG.SceneToolbar.X";
+		const string ToolbarPosYPref = "RealtimeCSG.SceneToolbar.Y";
+		static Vector2 toolbarPosition = new Vector2(float.NaN, float.NaN);
+		static bool draggingToolbar = false;
+		static Vector2 dragMouseOffset;
+		static Vector2 ToolbarPosition
+		{
+			get
+			{
+				if (float.IsNaN(toolbarPosition.x))
+					toolbarPosition = new Vector2(EditorPrefs.GetFloat(ToolbarPosXPref, 10f),
+												  EditorPrefs.GetFloat(ToolbarPosYPref, 10f));
+				return toolbarPosition;
+			}
+			set
+			{
+				toolbarPosition = value;
+				EditorPrefs.SetFloat(ToolbarPosXPref, value.x);
+				EditorPrefs.SetFloat(ToolbarPosYPref, value.y);
+			}
+		}
+
 		static void OnEditModeSelectionSceneGUI()
 		{
 			CSG_GUIStyleUtility.InitStyles();
@@ -129,7 +153,8 @@ namespace RealtimeCSG
 #endif
 
 
-				var bounds = new Rect(10, 10 + topBarSize, 500, 40);
+				var toolbarPos = ToolbarPosition;
+				var bounds = new Rect(toolbarPos.x, toolbarPos.y + topBarSize, 500, 40);
 
 				GUILayout.BeginArea(bounds, ContentTitleLabel, windowStyle);
 				{
@@ -151,7 +176,7 @@ namespace RealtimeCSG
 					buttonArea.y = 2;
 					buttonArea.height = 13;
 					buttonArea.width = 13;
-					if (GUI.Button(buttonArea, GUIContent.none, "WinBtnClose"))
+					if (GUI.Button(buttonArea, GUIContent.none, CSG_GUIStyleUtility.CloseWindowButtonStyle))
 						EditModeToolWindowSceneGUI.GetWindow();
 					TooltipUtility.SetToolTip(CSG_GUIStyleUtility.PopOutTooltip, buttonArea); 
 
@@ -165,13 +190,59 @@ namespace RealtimeCSG
 				}
 				GUILayout.EndArea();
 					 
+				// Title strip is the drag handle (top ~18px), excluding the pop-out X at the right.
+				var dragHandle = new Rect(bounds.x, bounds.y, bounds.width - 20f, 18f);
+				EditorGUIUtility.AddCursorRect(dragHandle, MouseCursor.MoveArrow);
+
 				int controlID = GUIUtility.GetControlID(SceneViewBrushEditorOverlayHash, FocusType.Keyboard, bounds);
 				switch (Event.current.GetTypeForControl(controlID))
 				{
-					case EventType.MouseDown:	{ if (bounds.Contains(Event.current.mousePosition)) { GUIUtility.hotControl = controlID; GUIUtility.keyboardControl = controlID; EditorGUIUtility.editingTextField = false; Event.current.Use(); } break; }
+					case EventType.MouseDown:
+					{
+						if (bounds.Contains(Event.current.mousePosition))
+						{
+							GUIUtility.hotControl = controlID; GUIUtility.keyboardControl = controlID;
+							EditorGUIUtility.editingTextField = false;
+							// Start a drag only when grabbing the title bar, not the toolbar buttons.
+							if (dragHandle.Contains(Event.current.mousePosition))
+							{
+								draggingToolbar = true;
+								dragMouseOffset = Event.current.mousePosition - new Vector2(bounds.x, bounds.y);
+							}
+							Event.current.Use();
+						}
+						break;
+					}
 					case EventType.MouseMove:	{ if (bounds.Contains(Event.current.mousePosition)) { Event.current.Use(); } break; }
-					case EventType.MouseUp:		{ if (GUIUtility.hotControl == controlID) { GUIUtility.hotControl = 0; GUIUtility.keyboardControl = 0; Event.current.Use(); } break; }
-					case EventType.MouseDrag:	{ if (GUIUtility.hotControl == controlID) { Event.current.Use(); } break; }
+					case EventType.MouseUp:
+					{
+						if (GUIUtility.hotControl == controlID)
+						{
+							GUIUtility.hotControl = 0; GUIUtility.keyboardControl = 0;
+							draggingToolbar = false;
+							Event.current.Use();
+						}
+						break;
+					}
+					case EventType.MouseDrag:
+					{
+						if (GUIUtility.hotControl == controlID)
+						{
+							if (draggingToolbar)
+							{
+								var newOrigin = Event.current.mousePosition - dragMouseOffset;
+								float maxX = 10f, maxY = 10f;
+								var sv = SceneView.currentDrawingSceneView;
+								if (sv != null) { maxX = Mathf.Max(10f, sv.position.width - 80f); maxY = Mathf.Max(10f, sv.position.height - 80f); }
+								ToolbarPosition = new Vector2(
+									Mathf.Clamp(newOrigin.x, 0f, maxX),
+									Mathf.Clamp(newOrigin.y - topBarSize, 0f, maxY));
+								CSG_EditorGUIUtility.RepaintAll();
+							}
+							Event.current.Use();
+						}
+						break;
+					}
 					case EventType.ScrollWheel: { if (bounds.Contains(Event.current.mousePosition)) { Event.current.Use(); } break; }
 				}
 			}

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
@@ -25,7 +25,7 @@ namespace InternalRealtimeCSG
 		}
 
 		public readonly int  SubMeshIndex;
-		public int			 SurfaceParameter;
+		public int			 SurfaceParameter; // mirrors GeneratedMeshDescription.surfaceParameter (int for native ABI)
 		public readonly MeshQuery MeshType;
 
         public override string ToString()
@@ -123,7 +123,7 @@ namespace InternalRealtimeCSG
 #if UNITY_EDITOR
 		public Mesh					SharedMesh;
 		public Material				RenderMaterial;
-		public PhysicMaterial		PhysicsMaterial;
+		public PhysicsMaterial		PhysicsMaterial;
 		public RenderSurfaceType	RenderSurfaceType = (RenderSurfaceType)999;
 
 		public GeneratedMeshDescription MeshDescription;
@@ -166,8 +166,8 @@ namespace InternalRealtimeCSG
 
 		public bool IsValid()
 		{
-			if ((!PhysicsMaterial || PhysicsMaterial.GetInstanceID() != 0) &&
-				(!RenderMaterial  || RenderMaterial .GetInstanceID() != 0))
+			if ((!PhysicsMaterial || PhysicsMaterial.GetEntityId() != UnityEngine.EntityId.None) &&
+				(!RenderMaterial  || RenderMaterial .GetEntityId() != UnityEngine.EntityId.None))
 			{
                 if (SharedMesh)
                 {
@@ -175,7 +175,7 @@ namespace InternalRealtimeCSG
                         return false;
                 } else
                 if (!ReferenceEquals(SharedMesh, null) &&
-                    SharedMesh.GetInstanceID() != 0)
+                    SharedMesh.GetEntityId() != UnityEngine.EntityId.None)
                     return false;
 				return true;
 			}
@@ -203,11 +203,11 @@ namespace InternalRealtimeCSG
             if (RenderSurfaceType == RenderSurfaceType.Collider ||
                 RenderSurfaceType == RenderSurfaceType.Trigger)
             {
-                if (!ReferenceEquals(PhysicsMaterial, null)) { if (PhysicsMaterial) MeshDescription.surfaceParameter = PhysicsMaterial.GetInstanceID(); }
+                if (!ReferenceEquals(PhysicsMaterial, null)) { if (PhysicsMaterial) MeshDescription.surfaceParameter = (int)UnityEngine.EntityId.ToULong(PhysicsMaterial.GetEntityId()); }
             } else
-            { 
-			    if      (!ReferenceEquals(RenderMaterial,  null)) { if (RenderMaterial)  MeshDescription.surfaceParameter = RenderMaterial .GetInstanceID(); }
-			    else if (!ReferenceEquals(PhysicsMaterial, null)) { if (PhysicsMaterial) MeshDescription.surfaceParameter = PhysicsMaterial.GetInstanceID(); }
+            {
+			    if      (!ReferenceEquals(RenderMaterial,  null)) { if (RenderMaterial)  MeshDescription.surfaceParameter = (int)UnityEngine.EntityId.ToULong(RenderMaterial .GetEntityId()); }
+			    else if (!ReferenceEquals(PhysicsMaterial, null)) { if (PhysicsMaterial) MeshDescription.surfaceParameter = (int)UnityEngine.EntityId.ToULong(PhysicsMaterial.GetEntityId()); }
             }
 		}
 

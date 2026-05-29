@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -181,7 +181,7 @@ namespace RealtimeCSG
 		{
 			var userID = coreNode.UserID;
 			var nodeID = coreNode.NodeID;
-			var obj = (userID != 0) ? EditorUtility.InstanceIDToObject(userID) : null;
+			var obj = (userID != 0) ? EditorUtility.EntityIdToObject(userID) : null;
 			if (obj == null)
 				return string.Format("<unknown> [{0}:{1}]", (nodeID-1), userID);
 			return obj.name + string.Format(" [{0}:{1}]", (nodeID-1), userID);
@@ -229,14 +229,14 @@ namespace RealtimeCSG
 					openNodes[nodeID] = EditorGUI.Foldout(itemRect, isOpen, name, true, style);
 					if (EditorGUI.EndChangeCheck())
 					{
-						var obj = EditorUtility.InstanceIDToObject(userID);
+						var obj = EditorUtility.EntityIdToObject(userID);
 						if (!(obj is GameObject))
 						{
 							var mono = (obj as MonoBehaviour);
 							if (mono)
-								userID = mono.gameObject.GetInstanceID();
+								userID = mono.gameObject.GetEntityId();
 						}
-						Selection.instanceIDs = new[] { userID };
+						Selection.entityIds = new[] { userID };
 					}
 				}
 				itemRect.y += kItemHeight;
@@ -261,15 +261,15 @@ namespace RealtimeCSG
 				UpdateStyles();
 
 			var selectedInstanceIDs = new HashSet<int>();
-			foreach(var instanceID in Selection.instanceIDs)
+			foreach(var instanceID in Selection.entityIds)
 			{
-				var obj = EditorUtility.InstanceIDToObject(instanceID);
+				var obj = EditorUtility.EntityIdToObject(instanceID);
 				var go = obj as GameObject;
 				if (go != null)
 				{
 					foreach(var no in go.GetComponents<CSGNode>())
 					{
-						var instanceID_ = no.GetInstanceID();
+						var instanceID_ = no.GetEntityId();
 						selectedInstanceIDs.Add(instanceID_);
 					}
 				}
@@ -320,7 +320,7 @@ namespace RealtimeCSG
 			GUI.EndScrollView();
 			if (selectedInstanceIDs.Count == 1)
 			{
-				var obj = EditorUtility.InstanceIDToObject(selectedInstanceIDs.First()) as CSGNode;
+				var obj = EditorUtility.EntityIdToObject(selectedInstanceIDs.First()) as CSGNode;
 				if (obj)
 				{ 
 					var brush		= obj as CSGBrush;

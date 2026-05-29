@@ -11,7 +11,7 @@ namespace RealtimeCSG
 	{
         public bool             TransformInitialized = false;
 		public Transform        Transform;
-		public int              TransformID;
+		public UnityEngine.EntityId TransformID;
 		public HierarchyItem    Parent;
 		public int              PrevSiblingIndex    = -1;
 		public int              SiblingIndex        = -1;
@@ -27,7 +27,7 @@ namespace RealtimeCSG
 		public virtual void Reset()
 		{
 			Transform			= null;
-			TransformID			= 0;
+			TransformID			= UnityEngine.EntityId.None;
 			Parent				= null;
 			PrevSiblingIndex	= -1;
 			SiblingIndex		= -1;

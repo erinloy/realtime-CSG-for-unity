@@ -649,6 +649,16 @@ namespace RealtimeCSG
 			return s;
 		}
 
+		// Unity 6 removed the builtin "WinBtnClose" GUIStyle. Resolve a close-button style
+		// silently (FindStyle never warns, unlike the implicit string->GUIStyle cast) with a
+		// guaranteed non-null fallback, so RealtimeCSG's in-scene tool-window close button stops
+		// spamming "Unable to find style 'WinBtnClose'" on every Scene-view repaint. Resolved
+		// per call (cheap dictionary lookup) so it stays valid across editor-skin changes and
+		// domain-reload-disabled Play sessions.
+		public static GUIStyle CloseWindowButtonStyle =>
+			GUI.skin.FindStyle("WinBtnClose")
+			?? GUI.skin.FindStyle("ToolbarButton")
+			?? GUI.skin.button;
 
 	}
 }

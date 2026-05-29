@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 
 namespace RealtimeCSG.Foundation
@@ -111,24 +111,28 @@ namespace RealtimeCSG.Foundation
 		public LayerUsageFlags	layerUsage;
 
 		/// <value>First layer-parameter.</value>
-		/// <remarks>Could be, for instance, an instanceID to a [Material](https://docs.unity3d.com/ScriptReference/Material.html), which can then be found using [EditorUtility.InstanceIDToObject](https://docs.unity3d.com/ScriptReference/EditorUtility.InstanceIDToObject.html)
+		/// <remarks>Could be, for instance, an instanceID to a [Material](https://docs.unity3d.com/ScriptReference/Material.html), which can then be found using [EditorUtility.EntityIdToObject](https://docs.unity3d.com/ScriptReference/EditorUtility.EntityIdToObject.html)
 		/// A value of 0 means that it's not set.
 		/// <code>
-		///	mySurfaceLayer.<paramref name="layerParameter1"/> = myMaterial.GetInstanceID();
+		///	mySurfaceLayer.<paramref name="layerParameter1"/> = myMaterial.GetEntityId();
 		///	... generate your mesh ...
-		///	Material myMaterial = EditorUtility.InstanceIDToObject(myGeneratedMeshContents.surfaceParameter);
+		///	Material myMaterial = EditorUtility.EntityIdToObject(myGeneratedMeshContents.surfaceParameter);
 		/// </code>
 		/// </remarks>
 		/// <seealso cref="RealtimeCSG.Foundation.LayerParameterIndex.LayerParameter1"/>.
+		// NOTE: must stay Int32 — this struct is [StructLayout(Sequential)] and marshalled to the
+		// native CSG plugin, which expects 4-byte ints. EntityId is 8 bytes (ulong-backed); using
+		// it here shifts the native layout and corrupts polygon data (edgeCount<3). EntityId<->int
+		// is converted at the C# boundary (BrushFactory assigns via (int)EntityId.ToULong(...)).
 		public Int32			layerParameter1;
 
 		/// <value>Second layer-parameter.</value>
-		/// <remarks>Could be, for instance, an instanceID to a [PhysicMaterial](https://docs.unity3d.com/ScriptReference/PhysicMaterial.html), which can then be found using [EditorUtility.InstanceIDToObject](https://docs.unity3d.com/ScriptReference/EditorUtility.InstanceIDToObject.html)
+		/// <remarks>Could be, for instance, an instanceID to a [PhysicMaterial](https://docs.unity3d.com/ScriptReference/PhysicMaterial.html), which can then be found using [EditorUtility.EntityIdToObject](https://docs.unity3d.com/ScriptReference/EditorUtility.EntityIdToObject.html)
 		/// A value of 0 means that it's not set.
 		/// <code>
-		///	mySurfaceLayer.<paramref name="layerParameter2"/> = myPhysicMaterial.GetInstanceID();
+		///	mySurfaceLayer.<paramref name="layerParameter2"/> = myPhysicMaterial.GetEntityId();
 		///	... generate your mesh ...
-		///	PhysicMaterial myMaterial = EditorUtility.InstanceIDToObject(myGeneratedMeshContents.surfaceParameter);
+		///	PhysicMaterial myMaterial = EditorUtility.EntityIdToObject(myGeneratedMeshContents.surfaceParameter);
 		/// </code>
 		/// </remarks>
 		/// <seealso cref="RealtimeCSG.Foundation.LayerParameterIndex.LayerParameter2"/>.

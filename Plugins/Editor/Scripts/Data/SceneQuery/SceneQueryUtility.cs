@@ -886,7 +886,7 @@ namespace InternalRealtimeCSG
 					continue;
 
 				if (ignoreUnrenderables && !ModelTraits.WillModelRender(model) &&
-					!Selection.Contains(model.gameObject.GetInstanceID()))
+					!Selection.Contains(model.gameObject.GetEntityId()))
 					continue;
 
 				__foundModels[foundModelCount] = model;
@@ -946,7 +946,7 @@ namespace InternalRealtimeCSG
                 return false;
 
             if (ignoreUnrenderables && !ModelTraits.WillModelRender(model) &&
-                !Selection.Contains(model.gameObject.GetInstanceID()))
+                !Selection.Contains(model.gameObject.GetEntityId()))
                 return false;
 
 			LegacyBrushIntersection[] modelIntersections;
@@ -958,10 +958,19 @@ namespace InternalRealtimeCSG
                                                                         ignoreBrushes: ignoreBrushes))
                 return false;
 
+			// Unity-6 port hardening: the native raycast can return true with a null result
+			// (e.g. nothing hit), which NRE-floods on every scene click. Guard before deref.
+			if (modelIntersections == null)
+                return false;
+
 			for (var i = 0; i < modelIntersections.Length; i++)
             {
                 var intersection = modelIntersections[i];
+                if (intersection.gameObject == null)
+                    continue;
                 var brush = intersection.gameObject.GetComponent<CSGBrush>();
+                if (brush == null)
+                    continue;
                 if (BrushTraits.IsSurfaceUnselectable(brush, intersection.surfaceIndex, brush.ChildData.Model.IsTrigger, ignoreSurfaceFlags: ignoreInvisibleSurfaces))
                     continue;
 
@@ -1007,7 +1016,7 @@ namespace InternalRealtimeCSG
 					continue;
 					
 				if (ignoreUnrenderables && !ModelTraits.WillModelRender(model) &&
-					!Selection.Contains(model.gameObject.GetInstanceID()))
+					!Selection.Contains(model.gameObject.GetEntityId()))
 					continue;
 
 				LegacyBrushIntersection[] modelIntersections;
