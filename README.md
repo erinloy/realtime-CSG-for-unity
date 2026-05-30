@@ -1,3 +1,25 @@
+# Unity 6 port — `unity6-port` branch (fork)
+
+This branch is a **fork of [LogicalError/realtime-CSG-for-unity](https://github.com/LogicalError/realtime-CSG-for-unity)** ported to compile and run on **Unity 6 (6000.x)**. Upstream targets Unity 2018–2021 and does not build on Unity 6. License unchanged: **MIT** (see `LICENSE.md`); all original authorship credit retained.
+
+**Install this fork (UPM Git URL):**
+
+```
+https://github.com/erinloy/realtime-CSG-for-unity.git#unity6-port
+```
+
+**What changed vs upstream**
+
+- **EntityId migration** — Unity 6 replaced `int` instance IDs with `UnityEngine.EntityId`: `GetInstanceID()`→`GetEntityId()`, `EditorUtility.InstanceIDToObject`→`EntityIdToObject`, `Selection.instanceIDs`→`entityIds`, hierarchy-window callbacks, and `PhysicMaterial`→`PhysicsMaterial`.
+- **Native-ABI fix (critical)** — `EntityId` is **ulong-backed (8 bytes)**. The `[StructLayout(Sequential)]` interop structs `SurfaceLayers` (`layerParameter1/2/3`) and `GeneratedMeshDescription` (`surfaceParameter`) **must stay 4-byte `Int32`** to match the native CSG plugin's struct layout — otherwise polygon data marshals corrupt and the native engine fails with `input_polygon.edgeCount < 3` / `GenerateMesh failed`. These fields are kept `Int32`; `EntityId`↔`int` conversion happens at the C# boundary.
+- **`WinBtnClose` GUIStyle** — removed in Unity 6; the in-scene tool-window close/pop-out button resolves a guarded fallback style instead of spamming "Unable to find style" on every Scene-view repaint.
+- **Scene-query null guard** — Unity 6's native raycast can return `true` with a `null` result; `SceneQueryUtility` guards it to avoid an NRE on every scene click.
+- **Enhancement — draggable in-scene toolbar** — the formerly hardcoded toolbar position is now drag-movable (grab the title bar) and persisted via `EditorPrefs`.
+
+**Status:** tested on **Unity 6000.6.0a5** (alpha). Brush create / edit / subtract works and geometry generates. Note: RealtimeCSG is **brush-based** — it builds and carves CSG *brushes*; it does **not** boolean-cut arbitrary existing meshes.
+
+---
+
 This github page holds the updated version of the Unity plugin Realtime-CSG
 
 If you use this plugin, please let us know, we'd love to see what you've done with it!
